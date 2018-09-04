@@ -5,42 +5,76 @@ import java.net.*;
 
 public class GuessTheWordServer {
 
-    private String currentHostAddress;
+    //Fel, klienten som spelar börjar prata strunt. Klienten ska bort och servern blir ledig
+    //Fel, En ny klient kommer och att man inte uppfattar att det är en annan klient
+
+
+    private Client currentClient;
     private String word;
     private int port;
+    private boolean isRunning;
+    private ServerState serverState;
 
     public GuessTheWordServer(String word, int port){
         this.word = word;
         this.port = port;
+        currentClient = null;
+        isRunning = false;
+        serverState = ServerState.READY;
     }
 
     public void start(){
+
+        isRunning = true;
+
         DatagramSocket socket = null;
         try {
             System.out.println("Creating DatagramSocket...");
             socket = new DatagramSocket(port);
 
-            boolean running = true;
-
-            while(running){
+            while(isRunning){
 
                 //Start listening for message
                 byte[] data = new byte[4096];
                 DatagramPacket datagramPacket = new DatagramPacket(data, data.length);
                 try {
+                    //RECIEVE UDP PACKAGE
                     System.out.println("Listening for incoming packages...");
                     socket.receive(datagramPacket);
-                    //Extract string
-                    InetAddress clientAdress = datagramPacket.getAddress();
+
+                    //EXTRACT CLIENT DATA
+                    InetAddress clientAddress = datagramPacket.getAddress();
                     int clientPort = datagramPacket.getPort();
-                    String message = new String(datagramPacket.getData(), 0, datagramPacket.getLength());
 
-                    //Print message information
-                    System.out.println("Package recieved:");
-                    System.out.println("Adress: " + clientAdress.getHostAddress());
-                    System.out.println("Port: " + clientPort);
-                    System.out.println("Message: " + message);
+                    //CHECK IF NEW CLIENT
+                    switch(serverState){
+                        case READY: {
+                            System.out.println("READY");
+                            currentClient = new Client(clientPort, clientAddress.getHostAddress());
+                            serverState = ServerState.BUSY;
+                        }
+                        case BUSY: {
+                            System.out.println("BUSY");
+                            if(!currentClient.getIpAddress().equals(clientAddress.getHostAddress())){
+                                System.out.println("SetIp: " + currentClient.getIpAddress());
+                                System.out.println("ConnectedIp: " + clientAddress.getHostAddress());
+                                System.out.println("WRONG CLIENT");
+                                //WRONG CLIENT, REJECT
+                                break;
+                            }
+                            else{
+                                //CONTINUE CONVERSATION
+                                //Extract Message
+                                String message = new String(datagramPacket.getData(), 0, datagramPacket.getLength());
 
+                                //Print message information
+                                System.out.println("Package recieved:");
+                                System.out.println("Adress: " + clientAddress.getHostAddress());
+                                System.out.println("Port: " + clientPort);
+                                System.out.println("Message: " + message);
+                            }
+                        }
+                    }
                 } catch (IOException e) {
                     System.err.println("DatagramSocket recieve error.");
                     break;
