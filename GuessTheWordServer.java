@@ -11,6 +11,7 @@ public class GuessTheWordServer {
 
     private Client currentClient;
     private String word;
+    private String expectedKeyword;
     private int port;
     private boolean isRunning;
     private ServerState serverState;
@@ -21,6 +22,7 @@ public class GuessTheWordServer {
         currentClient = null;
         isRunning = false;
         serverState = ServerState.READY;
+        expectedKeyword = "HELLO";
     }
 
     public void start(){
@@ -64,14 +66,31 @@ public class GuessTheWordServer {
                             }
                             else{
                                 //CONTINUE CONVERSATION
+                                System.out.println("Continue Conversation");
                                 //Extract Message
                                 String message = new String(datagramPacket.getData(), 0, datagramPacket.getLength());
 
-                                //Print message information
-                                System.out.println("Package recieved:");
-                                System.out.println("Adress: " + clientAddress.getHostAddress());
-                                System.out.println("Port: " + clientPort);
-                                System.out.println("Message: " + message);
+                                String keyword = extractKeyword(message);
+                                if(expectedKeyword.equals(keyword)){
+                                    switch(expectedKeyword){
+                                        case "HELLO": {
+                                            System.out.println("keyword:"+keyword);
+                                            System.out.println("Message recieved:");
+                                            System.out.println("Adress: " + clientAddress.getHostAddress());
+                                            System.out.println("Port: " + clientPort);
+                                            System.out.println("Message: " + message);
+                                            break;
+                                        }
+                                        default: {
+
+                                        }
+                                    }
+                                }
+                                else{
+                                    System.out.println("INCORRECT KEYWORD");
+                                    System.out.println("Expected: " + expectedKeyword);
+                                    System.out.println("Got: " + keyword);
+                                }
                             }
                         }
                     }
@@ -89,6 +108,19 @@ public class GuessTheWordServer {
             if(socket != null){
                 socket.close();
             }
+        }
+    }
+
+    private String extractKeyword(String s){
+        if(s.isEmpty()){
+            return "";
+        }
+        else if(!Character.isLetter(s.charAt(0))){
+            return "";
+        }
+        else{
+            String[] result =  s.split(" ", 2);
+            return result[0];
         }
     }
 
