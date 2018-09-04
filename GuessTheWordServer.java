@@ -15,21 +15,20 @@ import java.net.*;
 public class GuessTheWordServer {
 
     private Client currentClient;
-    private String word;
-    private String expectedKeyword;
     private int port;
     private boolean isRunning;
     private ServerState serverState;
+
+    private String word;
+    private String expectedKeyword;
+    private int noOfGuesses;
 
     private static final int MAX_NO_OF_GUESSES = 10;
 
     public GuessTheWordServer(String word, int port){
         this.word = word;
         this.port = port;
-        currentClient = null;
-        isRunning = false;
-        serverState = ServerState.READY;
-        expectedKeyword = "REQ";
+        reset();
     }
 
     public void start(){
@@ -73,8 +72,8 @@ public class GuessTheWordServer {
                                 System.out.println("case READY: else");
                                 sendToClient("ERR", currentClient, socket);
                                 currentClient = null;
-                                break;
                             }
+                            break;
                         }
                         case BUSY: {
                             if(!currentClient.getInetAddress().getHostAddress().equals(clientAddress.getHostAddress())){
@@ -88,26 +87,28 @@ public class GuessTheWordServer {
                                 if(expectedKeyword.equals(keyword)){
                                     switch(expectedKeyword){
                                         case "SRT": {
-                                            
+                                            sendToClient("Game Started!", currentClient, socket);
+                                            expectedKeyword = "GUE";
                                             break;
                                         }
                                         case "GUE": {
-
-                                        }
-                                        default: {
-
+                                            sendToClient("Guess", currentClient, socket);
+                                            break;
                                         }
                                     }
                                 }
                                 else{
-                                    //Reply with ERROR since wrong keyword was sent
+                                    //Drop client and reset since wrong keyword was sent
+                                    System.out.println("Drop client...");
+                                    sendToClient("ERR", currentClient, socket);
+                                    reset();
                                 }
                             }
                         }
                     }
                 } catch (IOException e) {
-                    System.err.println("DatagramSocket recieve error.");
-                    break;
+                    System.err.println("Socket error");
+                    reset();
                 }
             }
 
@@ -120,6 +121,17 @@ public class GuessTheWordServer {
                 socket.close();
             }
         }
+    }
+
+    public boolean isRunning(){
+        return isRunning;
+    }
+
+    private void reset(){
+        serverState = ServerState.READY;
+        expectedKeyword = "REQ";
+        noOfGuesses = 0;
+        currentClient = null;
     }
 
     private void sendToClient(String text, Client currentClient, DatagramSocket socket) throws IOException{
