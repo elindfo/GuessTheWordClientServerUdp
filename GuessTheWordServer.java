@@ -74,11 +74,25 @@ public class GuessTheWordServer {
                                 if(expectedKeyword.equals(keyword)){
                                     switch(expectedKeyword){
                                         case "HELLO": {
+                                            System.out.println("\n----------------------------------");
                                             System.out.println("keyword:"+keyword);
                                             System.out.println("Message recieved:");
                                             System.out.println("Adress: " + clientAddress.getHostAddress());
                                             System.out.println("Port: " + clientPort);
                                             System.out.println("Message: " + message);
+                                            expectedKeyword = "GAME";
+                                            System.out.println("New expected set to: " + expectedKeyword);
+                                            System.out.println("----------------------------------");
+                                            break;
+                                        }
+                                        case "GAME": {
+                                            System.out.println("\n----------------------------------");
+                                            System.out.println("keyword:"+keyword);
+                                            System.out.println("Message recieved:");
+                                            System.out.println("Adress: " + clientAddress.getHostAddress());
+                                            System.out.println("Port: " + clientPort);
+                                            System.out.println("Message: " + message);
+                                            System.out.println("----------------------------------");
                                             break;
                                         }
                                         default: {
@@ -87,9 +101,12 @@ public class GuessTheWordServer {
                                     }
                                 }
                                 else{
+                                    System.out.println("\n----------------------------------");
                                     System.out.println("INCORRECT KEYWORD");
                                     System.out.println("Expected: " + expectedKeyword);
                                     System.out.println("Got: " + keyword);
+                                    System.out.println("----------------------------------");
+
                                 }
                             }
                         }
