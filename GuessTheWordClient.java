@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.net.*;
 import java.util.Scanner;
 
+//TODO Handle unresponsive server
+
 public class GuessTheWordClient {
 
     public static void main(String[] args) {
@@ -26,6 +28,14 @@ public class GuessTheWordClient {
                             data, data.length, toAddr, 6543
                     );
                     socket.send(pack);
+
+                    //Start listening for message
+                    byte[] receivedData = new byte[4096];
+                    DatagramPacket receivedPacket = new DatagramPacket(receivedData, receivedData.length);
+
+                    socket.receive(receivedPacket);
+                    String receivedMessage = new String(receivedPacket.getData(), 0, receivedPacket.getLength());
+                    System.out.println("From server: " + receivedMessage);
                 }while(!message.equals("exit"));
             } catch (UnknownHostException e) {
                 e.printStackTrace();

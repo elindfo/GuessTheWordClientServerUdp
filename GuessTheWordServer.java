@@ -3,11 +3,16 @@ package lab1a;
 import java.io.IOException;
 import java.net.*;
 
+//Fel, klienten som spelar börjar prata strunt. Klienten ska bort och servern blir ledig
+//Fel, En ny klient kommer och att man inte uppfattar att det är en annan klient
+
+//TODO Take action if wrong message arrives, e.g. terminate session or request a new message
+//TODO Handle timeout from client with System.getCurrentTimeMillis(). Reset server state.
+//TODO If new client sends anything other than
+//TODO Handle exceptions
+//TODO Check if REJ in state BUSY works
+
 public class GuessTheWordServer {
-
-    //Fel, klienten som spelar börjar prata strunt. Klienten ska bort och servern blir ledig
-    //Fel, En ny klient kommer och att man inte uppfattar att det är en annan klient
-
 
     private Client currentClient;
     private String word;
@@ -16,13 +21,15 @@ public class GuessTheWordServer {
     private boolean isRunning;
     private ServerState serverState;
 
+    private static final int MAX_NO_OF_GUESSES = 10;
+
     public GuessTheWordServer(String word, int port){
         this.word = word;
         this.port = port;
         currentClient = null;
         isRunning = false;
         serverState = ServerState.READY;
-        expectedKeyword = "HELLO";
+        expectedKeyword = "REQ";
     }
 
     public void start(){
@@ -44,6 +51,10 @@ public class GuessTheWordServer {
                     System.out.println("Listening for incoming packages...");
                     socket.receive(datagramPacket);
 
+                    //EXTRACT MESSAGE
+                    String message = new String(datagramPacket.getData(), 0, datagramPacket.getLength());
+                    String keyword = extractKeyword(message);
+
                     //EXTRACT CLIENT DATA
                     InetAddress clientAddress = datagramPacket.getAddress();
                     int clientPort = datagramPacket.getPort();
@@ -51,49 +62,37 @@ public class GuessTheWordServer {
                     //CHECK IF NEW CLIENT
                     switch(serverState){
                         case READY: {
-                            System.out.println("READY");
-                            currentClient = new Client(clientPort, clientAddress.getHostAddress());
-                            serverState = ServerState.BUSY;
+                            currentClient = new Client(clientPort, clientAddress);
+                            System.out.println("case READY: noOfWords="+message.split(" ").length);
+                            if(expectedKeyword.equals(keyword) && message.split(" ").length == 1){
+                                sendToClient("RDY", currentClient, socket);
+                                serverState = ServerState.BUSY;
+                                expectedKeyword = "SRT";
+                            }
+                            else{
+                                System.out.println("case READY: else");
+                                sendToClient("ERR", currentClient, socket);
+                                currentClient = null;
+                                break;
+                            }
                         }
                         case BUSY: {
-                            System.out.println("BUSY");
-                            if(!currentClient.getIpAddress().equals(clientAddress.getHostAddress())){
-                                System.out.println("SetIp: " + currentClient.getIpAddress());
-                                System.out.println("ConnectedIp: " + clientAddress.getHostAddress());
-                                System.out.println("WRONG CLIENT");
-                                //WRONG CLIENT, REJECT
+                            if(!currentClient.getInetAddress().getHostAddress().equals(clientAddress.getHostAddress())){
+                                sendToClient("REJ", new Client(
+                                        datagramPacket.getPort(),
+                                        clientAddress), socket);
                                 break;
                             }
                             else{
                                 //CONTINUE CONVERSATION
-                                System.out.println("Continue Conversation");
-                                //Extract Message
-                                String message = new String(datagramPacket.getData(), 0, datagramPacket.getLength());
-
-                                String keyword = extractKeyword(message);
                                 if(expectedKeyword.equals(keyword)){
                                     switch(expectedKeyword){
-                                        case "HELLO": {
-                                            System.out.println("\n----------------------------------");
-                                            System.out.println("keyword:"+keyword);
-                                            System.out.println("Message recieved:");
-                                            System.out.println("Adress: " + clientAddress.getHostAddress());
-                                            System.out.println("Port: " + clientPort);
-                                            System.out.println("Message: " + message);
-                                            expectedKeyword = "GAME";
-                                            System.out.println("New expected set to: " + expectedKeyword);
-                                            System.out.println("----------------------------------");
+                                        case "SRT": {
+                                            
                                             break;
                                         }
-                                        case "GAME": {
-                                            System.out.println("\n----------------------------------");
-                                            System.out.println("keyword:"+keyword);
-                                            System.out.println("Message recieved:");
-                                            System.out.println("Adress: " + clientAddress.getHostAddress());
-                                            System.out.println("Port: " + clientPort);
-                                            System.out.println("Message: " + message);
-                                            System.out.println("----------------------------------");
-                                            break;
+                                        case "GUE": {
+
                                         }
                                         default: {
 
@@ -101,12 +100,7 @@ public class GuessTheWordServer {
                                     }
                                 }
                                 else{
-                                    System.out.println("\n----------------------------------");
-                                    System.out.println("INCORRECT KEYWORD");
-                                    System.out.println("Expected: " + expectedKeyword);
-                                    System.out.println("Got: " + keyword);
-                                    System.out.println("----------------------------------");
-
+                                    //Reply with ERROR since wrong keyword was sent
                                 }
                             }
                         }
@@ -126,6 +120,17 @@ public class GuessTheWordServer {
                 socket.close();
             }
         }
+    }
+
+    private void sendToClient(String text, Client currentClient, DatagramSocket socket) throws IOException{
+        byte[] bytes = text.getBytes();
+        DatagramPacket pkt = new DatagramPacket(
+                bytes,
+                bytes.length,
+                currentClient.getInetAddress(),
+                currentClient.getPort()
+        );
+        socket.send(pkt);
     }
 
     private String extractKeyword(String s){

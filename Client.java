@@ -1,20 +1,22 @@
 package lab1a;
 
+import java.net.InetAddress;
+
 public class Client {
 
     private int port;
-    private String ipAddress;
+    private InetAddress inetAddress;
 
-    public Client(int port, String ipAddress){
+    public Client(int port, InetAddress inetAddress){
         this.port = port;
-        this.ipAddress = ipAddress;
+        this.inetAddress = inetAddress;
     }
 
     public int getPort() {
         return port;
     }
 
-    public String getIpAddress() {
-        return ipAddress;
+    public InetAddress getInetAddress() {
+        return inetAddress;
     }
 }
