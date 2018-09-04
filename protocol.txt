@@ -1,6 +1,7 @@
-Client: REQ
-Server: RDY/BSY
-Client: SRT
-Server: GME [number of letters in word]
-CLient: GUE [letter]
-Server:
+1. Client sends REQ to server to see whether the server is busy or not
+2. Server responds with either RDY or BSY depending on current state
+3. If server is RDY, Client sends SRT to ask the server to start a new game
+4. Server sends GME [number of letters in word] to client
+5. Client starts guessing letters by sending GUE [letter] to server
+6. Server answers with a string of letters in the format **P***, where asterisks is non-found letters
+7. Repeat from 5 until word is found or max number of guesses is reached

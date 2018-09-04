@@ -22,16 +22,19 @@ public class GuessTheWordServer {
     private String word;
     private String expectedKeyword;
     private int noOfGuesses;
+    private char[] correctLettersGuessed;
 
     private static final int MAX_NO_OF_GUESSES = 10;
 
     public GuessTheWordServer(String word, int port){
-        this.word = word;
+        this.word = word.toUpperCase();
         this.port = port;
         reset();
     }
 
     public void start(){
+
+        System.out.println("Current Word: " + word);
 
         isRunning = true;
 
@@ -51,7 +54,7 @@ public class GuessTheWordServer {
                     socket.receive(datagramPacket);
 
                     //EXTRACT MESSAGE
-                    String message = new String(datagramPacket.getData(), 0, datagramPacket.getLength());
+                    String message = new String(datagramPacket.getData(), 0, datagramPacket.getLength()).toUpperCase();
                     String keyword = extractKeyword(message);
 
                     //EXTRACT CLIENT DATA
@@ -99,7 +102,19 @@ public class GuessTheWordServer {
                                             }
                                             else{
                                                 if(Character.isLetter(splitMessage[1].charAt(0)) && splitMessage[1].length() == 1){
-                                                    sendToClient("Character sent: " + splitMessage[1], currentClient, socket);
+                                                    updateLetters(splitMessage[1].charAt(0));
+                                                    if(hasAllLettersFound()){
+                                                        StringBuffer sb = new StringBuffer("CONGRATULATIONS - You found the word!");
+                                                        sb.append("\n");
+                                                        sb.append("Word: ");
+                                                        sb.append(word);
+                                                        sendToClient(sb.toString(), currentClient, socket);
+                                                        reset();
+                                                    }
+                                                    else{
+                                                        sendToClient(getFoundLettersAsString(), currentClient, socket);
+                                                    }
+
                                                 }
                                                 else{
                                                     sendToClient("Invalid character", currentClient, socket);
@@ -143,7 +158,46 @@ public class GuessTheWordServer {
         serverState = ServerState.READY;
         expectedKeyword = "REQ";
         noOfGuesses = 0;
+        correctLettersGuessed = new char[word.length()];
         currentClient = null;
+    }
+
+    private boolean updateLetters(char letter){
+        for(int i = 0; i < correctLettersGuessed.length; i++){
+            if(letter == correctLettersGuessed[i]){
+                return false;
+            }
+        }
+        boolean foundNewLetter = false;
+        for(int i = 0; i < word.length(); i++){
+            if(letter == word.charAt(i)){
+                correctLettersGuessed[i] = letter;
+                foundNewLetter = true;
+            }
+        }
+        return foundNewLetter;
+    }
+
+    private boolean hasAllLettersFound(){
+        for(int i = 0; i < word.length(); i++){
+            if(word.charAt(i) != correctLettersGuessed[i]){
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private String getFoundLettersAsString(){
+        StringBuffer sb = new StringBuffer();
+        for(int i = 0; i < word.length(); i++){
+            if(word.charAt(i) == correctLettersGuessed[i]){
+                sb.append(word.charAt(i));
+            }
+            else{
+                sb.append("*");
+            }
+        }
+        return sb.toString();
     }
 
     private void sendToClient(String text, Client currentClient, DatagramSocket socket) throws IOException{
@@ -176,8 +230,6 @@ public class GuessTheWordServer {
             System.out.println("Usage: java guessthewordserver [word]");
             System.exit(1);
         }
-
-        System.out.println("Server: Word set to: " + args[0]);
 
         int port = 6543;
 
