@@ -7,7 +7,6 @@ public class GuessTheWordClient {
 
     public static void main(String[] args) {
 
-
         DatagramSocket socket = null;
         try{
             socket = new DatagramSocket(6542);

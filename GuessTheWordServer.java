@@ -5,23 +5,21 @@ import java.net.*;
 
 public class GuessTheWordServer {
 
-    public static void main(String[] args) {
-        if(args.length != 1){
-            System.out.println("You need to enter a word.");
-            System.out.println("Usage: java guessthewordserver [word]");
-            System.exit(1);
-        }
+    private String currentHostAddress;
+    private String word;
+    private int port;
 
-        System.out.println("Server: Word set to: " + args[0]);
+    public GuessTheWordServer(String word, int port){
+        this.word = word;
+        this.port = port;
+    }
 
-        int port = 6543;
-
+    public void start(){
         DatagramSocket socket = null;
         try {
             System.out.println("Creating DatagramSocket...");
             socket = new DatagramSocket(port);
 
-            ServerState state = ServerState.READY;
             boolean running = true;
 
             while(running){
@@ -58,5 +56,20 @@ public class GuessTheWordServer {
                 socket.close();
             }
         }
+    }
+
+    public static void main(String[] args) {
+        if(args.length != 1){
+            System.out.println("You need to enter a word.");
+            System.out.println("Usage: java guessthewordserver [word]");
+            System.exit(1);
+        }
+
+        System.out.println("Server: Word set to: " + args[0]);
+
+        int port = 6543;
+
+        GuessTheWordServer server = new GuessTheWordServer(args[0], port);
+        server.start();
     }
 }
