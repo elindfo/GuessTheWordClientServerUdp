@@ -87,12 +87,24 @@ public class GuessTheWordServer {
                                 if(expectedKeyword.equals(keyword)){
                                     switch(expectedKeyword){
                                         case "SRT": {
-                                            sendToClient("Game Started!", currentClient, socket);
+                                            sendToClient("GME " + word.length(), currentClient, socket);
                                             expectedKeyword = "GUE";
                                             break;
                                         }
                                         case "GUE": {
-                                            sendToClient("Guess", currentClient, socket);
+                                            //Check if right format
+                                            String[] splitMessage = message.split(" ");
+                                            if(splitMessage.length != 2){
+                                                sendToClient("Invalid character", currentClient, socket);
+                                            }
+                                            else{
+                                                if(Character.isLetter(splitMessage[1].charAt(0)) && splitMessage[1].length() == 1){
+                                                    sendToClient("Character sent: " + splitMessage[1], currentClient, socket);
+                                                }
+                                                else{
+                                                    sendToClient("Invalid character", currentClient, socket);
+                                                }
+                                            }
                                             break;
                                         }
                                     }
