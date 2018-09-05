@@ -6,11 +6,7 @@ import java.net.*;
 //Fel, klienten som spelar börjar prata strunt. Klienten ska bort och servern blir ledig
 //Fel, En ny klient kommer och att man inte uppfattar att det är en annan klient
 
-//TODO Take action if wrong message arrives, e.g. terminate session or request a new message
 //TODO Handle timeout from client with System.getCurrentTimeMillis(). Reset server state.
-//TODO If new client sends anything other than
-//TODO Handle exceptions
-//TODO Check if REJ in state BUSY works
 
 public class GuessTheWordServer {
 
@@ -26,6 +22,8 @@ public class GuessTheWordServer {
 
     private static final int MAX_NO_OF_GUESSES = 10;
 
+    private static final int TIMEOUT_IN_SECONDS = 10;
+
     public GuessTheWordServer(String word, int port){
         this.word = word.toUpperCase();
         this.port = port;
@@ -40,18 +38,20 @@ public class GuessTheWordServer {
 
         DatagramSocket socket = null;
         try {
-            System.out.println("Creating DatagramSocket...");
             socket = new DatagramSocket(port);
-
+            int noOfPackages = 0;
             while(isRunning){
 
                 //Start listening for message
                 byte[] data = new byte[4096];
                 DatagramPacket datagramPacket = new DatagramPacket(data, data.length);
+                long currentTime = 0;
                 try {
                     //RECIEVE UDP PACKAGE
-                    System.out.println("Listening for incoming packages...");
                     socket.receive(datagramPacket);
+
+                    //SAVE TIMESTAMP
+                    currentTime = System.currentTimeMillis();
 
                     //EXTRACT MESSAGE
                     String message = new String(datagramPacket.getData(), 0, datagramPacket.getLength()).toUpperCase();
@@ -61,28 +61,62 @@ public class GuessTheWordServer {
                     InetAddress clientAddress = datagramPacket.getAddress();
                     int clientPort = datagramPacket.getPort();
 
+                    System.out.println("\n------INFO------");
+                    System.out.printf("%-10s : %s\n", "Pno", ++noOfPackages);
+                    System.out.printf("%-10s : %s\n", "IP", clientAddress.getHostAddress());
+                    System.out.printf("%-10s : %s\n", "Port", clientPort);
+
+                    if(serverState == ServerState.BUSY){
+                        long timeDifference = currentTime - currentClient.getTimeOfCurrentDatagram();
+                        if(timeDifference > TIMEOUT_IN_SECONDS * 1000){
+                            System.out.printf("%-10s : %s\n", "Timer", "EXPIRED - Difference:" + timeDifference + "ms");
+                            reset();
+                        }
+                        else{
+                            if(currentClient.getInetAddress().getHostAddress().equals(clientAddress.getHostAddress())){
+                                currentClient.setTimeOfCurrentDatagram(currentTime);
+                                System.out.printf("%-10s : %s\n", "Timer", "UPDATED - Difference:" + timeDifference + "ms");
+                            }
+                            else{
+                                System.out.printf("%-10s : %s\n", "Timer", "RUNNING - Difference:" + timeDifference + "ms");
+                            }
+                        }
+                    }
+                    System.out.printf("%-10s : %s\n", "State", serverState);
+                    if(expectedKeyword.equals("GUE")){
+                        System.out.printf("%-10s : %s\n", "Expected", expectedKeyword + " [letter]");
+                    }
+                    else{
+                        System.out.printf("%-10s : %s\n", "Expected", expectedKeyword);
+                    }
+                    System.out.printf("%-10s : %s\n", "Recieved", message);
+
                     //CHECK IF NEW CLIENT
                     switch(serverState){
                         case READY: {
                             currentClient = new Client(clientPort, clientAddress);
-                            System.out.println("case READY: noOfWords="+message.split(" ").length);
                             if(expectedKeyword.equals(keyword) && message.split(" ").length == 1){
                                 sendToClient("RDY", currentClient, socket);
                                 serverState = ServerState.BUSY;
                                 expectedKeyword = "SRT";
+                                currentClient.setTimeOfCurrentDatagram(currentTime);
+                                System.out.printf("%-10s : %s\n", "Status", "Client CONNECTED");
+
                             }
                             else{
-                                System.out.println("case READY: else");
                                 sendToClient("ERR", currentClient, socket);
                                 currentClient = null;
+                                System.out.printf("%-10s : %s\n", "Status", "Invalid message received");
+
                             }
                             break;
                         }
                         case BUSY: {
                             if(!currentClient.getInetAddress().getHostAddress().equals(clientAddress.getHostAddress())){
-                                sendToClient("REJ", new Client(
+                                sendToClient("BSY", new Client(
                                         datagramPacket.getPort(),
                                         clientAddress), socket);
+                                System.out.printf("%-10s : %s\n", "Status", "Client REJECTED");
                                 break;
                             }
                             else{
@@ -92,6 +126,7 @@ public class GuessTheWordServer {
                                         case "SRT": {
                                             sendToClient("GME " + word.length(), currentClient, socket);
                                             expectedKeyword = "GUE";
+                                            System.out.printf("%-10s : %s\n", "Status", "Game STARTED - Word length sent to client");
                                             break;
                                         }
                                         case "GUE": {
@@ -99,25 +134,30 @@ public class GuessTheWordServer {
                                             String[] splitMessage = message.split(" ");
                                             if(splitMessage.length != 2){
                                                 sendToClient("IVD", currentClient, socket);
+                                                System.out.printf("%-10s : %s\n", "Status", "Invalid character recieved");
                                             }
                                             else{
                                                 if(Character.isLetter(splitMessage[1].charAt(0)) && splitMessage[1].length() == 1){
                                                     updateLetters(splitMessage[1].charAt(0));
+                                                    noOfGuesses++;
                                                     if(hasAllLettersFound()){
-                                                        StringBuffer sb = new StringBuffer("CONGRATULATIONS - You found the word!");
-                                                        sb.append("\n");
-                                                        sb.append("Word: ");
-                                                        sb.append(word);
-                                                        sendToClient(sb.toString(), currentClient, socket);
+                                                        sendToClient("WIN " + noOfGuesses + " " + word, currentClient, socket);
+                                                        System.out.printf("%-10s : %s\n", "Status", "Game Over: WIN");
+                                                        reset();
+                                                    }
+                                                    else if(noOfGuesses >= MAX_NO_OF_GUESSES){
+                                                        sendToClient("LSS " + word, currentClient, socket);
+                                                        System.out.printf("%-10s : %s\n", "Status", "Game Over: LOSS");
                                                         reset();
                                                     }
                                                     else{
-                                                        sendToClient(getFoundLettersAsString(), currentClient, socket);
+                                                        sendToClient("CUR " + noOfGuesses + " " + getFoundLettersAsString(), currentClient, socket);
+                                                        System.out.printf("%-10s : %s\n", "Status", "Playing - Characters found: " + getFoundLettersAsString());
                                                     }
-
                                                 }
                                                 else{
                                                     sendToClient("IVD", currentClient, socket);
+                                                    System.out.printf("%-10s : %s\n", "Status", "Invalid character recieved");
                                                 }
                                             }
                                             break;
@@ -126,13 +166,23 @@ public class GuessTheWordServer {
                                 }
                                 else{
                                     //Drop client and reset since wrong keyword was sent
-                                    System.out.println("Drop client...");
                                     sendToClient("ERR", currentClient, socket);
+                                    System.out.printf("%-10s : %s\n", "Status", "Wrong keyword recieved. Client dropped.");
                                     reset();
                                 }
                             }
                         }
                     }
+                    System.out.printf("%-10s : %s\n", "NoGuesses", noOfGuesses);
+                    System.out.printf("%-10s : %s\n", "Word", word);
+
+                    if(currentClient != null) {
+                        System.out.printf("%-10s : %s\n", "Connected", currentClient.getInetAddress().getHostAddress());
+                    }
+                    else{
+                        System.out.printf("%-10s : %s\n", "Connected", "not connected");
+                    }
+                    System.out.println("----------------");
                 } catch (IOException e) {
                     System.err.println("Socket error");
                     reset();
