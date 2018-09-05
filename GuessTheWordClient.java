@@ -13,6 +13,7 @@ public class GuessTheWordClient {
             System.err.println("Wrong number of arguments. \nCorrect usage: java GuessTheWordClient XXX.XXX.XXX.XXX PORT");
             System.exit(1);
         }
+        System.out.println("To start, type \"REQ\"");
         Scanner input = new Scanner(System.in);
         boolean running = true;
         DatagramSocket socket = null;
@@ -24,6 +25,7 @@ public class GuessTheWordClient {
                 toAddr = InetAddress.getByName(args[0]);
                 String message = "";
                 do {
+
                     System.out.print("Send message: ");
                     message = input.nextLine();
                     byte[] data = message.getBytes();
@@ -40,18 +42,61 @@ public class GuessTheWordClient {
 
                     String receivedMessage = new String(receivedPacket.getData(), 0, receivedPacket.getLength());
 
-                    System.out.println("From server: " + receivedMessage);
+                    //System.out.println("From server: " + receivedMessage);
                     String extractedKeyWord = extractKeyword(receivedMessage);
-
-                    switch (extractedKeyWord) {
-                        case "BSY": {
+                    String[] receiveMessageSplit = receivedMessage.split(" ");
+                    switch (extractedKeyWord) { //TOTO REJ, LSS
+                        case "BSY": { // Server is busy with other player, (not used now)
                             System.out.println("Server response: BSY");
                             running = false;
                             break;
                         }
-                        case "RDY": {
+                        case "RDY": { // Server responding to a REQ
                             System.out.println("Server response: RDY");
                             System.out.println("Server waiting for SRT");
+                            break;
+                        }
+                        case "GME": { // Welcome message
+                            System.out.println("Server response: GME");
+                            System.out.println("Guess the word\n" +
+                                    "Number of letters: " + receiveMessageSplit[1]);
+                            break;
+                        }
+                        case "CUR": { // Current situation
+                            System.out.println("Server response: CUR");
+                            System.out.println("WORD: " + receiveMessageSplit[2]);
+                            System.out.println("Number of guesses: " + receiveMessageSplit[1]);
+                            break;
+                        }
+                        case "IVD": { // Invalid Command
+                            System.out.println("Server response: IVD");
+                            System.out.println("Invalid command" +
+                                    ", Correct use is: GUE *");
+                            break;
+                        }
+                        case "ERR": { // Time limit expired
+                            System.out.println("Server response: ERR");
+                            System.out.println("Invalid protocol usage" +
+                                    ", Game session reset by server.");
+                            break;
+                        }
+                        case "REJ": { // Server is busy with another player
+                            System.out.println("Server response: REJ");
+                            System.out.println("Server Busy, try again later.");
+                            break;
+                        }
+                        case "WIN": { // Win message
+                            System.out.println("Server response: WIN");
+                            System.out.println("CONGRATULATIONS - You found the word!");
+                            System.out.println("You got the answer in " + receiveMessageSplit[1] + " guesses.");
+                            System.out.println(receiveMessageSplit[2]);
+                            running = false;
+                            break;
+                        }
+                        case "LSS": { // Loose message
+                            System.out.println("Server response: LSS");
+                            System.out.println("FAILED - You did not find the word.. :(");
+                            System.out.println("Correct word was " + receiveMessageSplit[1]);
                             break;
                         }
                     }
