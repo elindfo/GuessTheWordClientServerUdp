@@ -9,23 +9,26 @@ import java.util.Scanner;
 public class GuessTheWordClient {
 
     public static void main(String[] args) {
-
+        if (args.length != 2) {
+            System.err.println("Wrong number of arguments. \nCorrect usage: java GuessTheWordClient XXX.XXX.XXX.XXX PORT");
+            System.exit(1);
+        }
         Scanner input = new Scanner(System.in);
-
+        boolean running = true;
         DatagramSocket socket = null;
-        try{
+        try {
             socket = new DatagramSocket(6542);
-
+            socket.setSoTimeout(1000);
             InetAddress toAddr;
             try {
-                toAddr = InetAddress.getByName("localhost");
+                toAddr = InetAddress.getByName(args[0]);
                 String message = "";
                 do {
                     System.out.print("Send message: ");
                     message = input.nextLine();
                     byte[] data = message.getBytes();
                     DatagramPacket pack = new DatagramPacket(
-                            data, data.length, toAddr, 6543
+                            data, data.length, toAddr, Integer.parseInt(args[1])
                     );
                     socket.send(pack);
 
@@ -34,21 +37,64 @@ public class GuessTheWordClient {
                     DatagramPacket receivedPacket = new DatagramPacket(receivedData, receivedData.length);
 
                     socket.receive(receivedPacket);
+
                     String receivedMessage = new String(receivedPacket.getData(), 0, receivedPacket.getLength());
+
                     System.out.println("From server: " + receivedMessage);
-                }while(!message.equals("exit"));
+                    String extractedKeyWord = extractKeyword(receivedMessage);
+
+                    switch (extractedKeyWord) {
+                        case "BSY": {
+                            System.out.println("Server response: BSY");
+                            running = false;
+                            break;
+                        }
+                        case "RDY": {
+                            System.out.println("Server response: RDY");
+                            System.out.println("Server waiting for SRT");
+                            break;
+                        }
+                    }
+
+                } while (running);
             } catch (UnknownHostException e) {
                 e.printStackTrace();
-            } catch (IOException ioe){
-                System.err.println("Unable to send packet");
+            } catch (SocketTimeoutException ste) {
+                System.err.println("No response");
+                System.err.println("Closing Client");
             }
-        }catch(SocketException se){
+            catch (IOException ioe) {
+                ioe.printStackTrace();
+            }
+        } catch (SocketException se) {
             System.err.println("Socket exception");
-        }
-        finally{
-            if(socket != null){
+        } finally {
+            if (socket != null) {
                 socket.close();
             }
         }
     }
+
+    private static void sendToServer(String text, InetAddress inetAddress, DatagramSocket socket, int port) throws IOException {
+        byte[] bytes = text.getBytes();
+        DatagramPacket pkt = new DatagramPacket(
+                bytes,
+                bytes.length,
+                inetAddress,
+                port
+        );
+        socket.send(pkt);
+    }
+
+    private static String extractKeyword(String s) {
+        if (s.isEmpty()) {
+            return "";
+        } else if (!Character.isLetter(s.charAt(0))) {
+            return "";
+        } else {
+            String[] result = s.split(" ", 2);
+            return result[0];
+        }
+    }
+
 }

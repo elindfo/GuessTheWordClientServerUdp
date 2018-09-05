@@ -98,7 +98,7 @@ public class GuessTheWordServer {
                                             //Check if right format
                                             String[] splitMessage = message.split(" ");
                                             if(splitMessage.length != 2){
-                                                sendToClient("Invalid character", currentClient, socket);
+                                                sendToClient("IVD", currentClient, socket);
                                             }
                                             else{
                                                 if(Character.isLetter(splitMessage[1].charAt(0)) && splitMessage[1].length() == 1){
@@ -117,7 +117,7 @@ public class GuessTheWordServer {
 
                                                 }
                                                 else{
-                                                    sendToClient("Invalid character", currentClient, socket);
+                                                    sendToClient("IVD", currentClient, socket);
                                                 }
                                             }
                                             break;
