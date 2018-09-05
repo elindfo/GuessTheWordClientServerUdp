@@ -61,7 +61,7 @@ public class GuessTheWordServer {
                     InetAddress clientAddress = datagramPacket.getAddress();
                     int clientPort = datagramPacket.getPort();
 
-                    System.out.println("\n---NEW PACKAGE---");
+                    System.out.println("\n------INFO------");
                     System.out.printf("%-10s : %s\n", "Pno", ++noOfPackages);
                     System.out.printf("%-10s : %s\n", "IP", clientAddress.getHostAddress());
                     System.out.printf("%-10s : %s\n", "Port", clientPort);
@@ -83,7 +83,12 @@ public class GuessTheWordServer {
                         }
                     }
                     System.out.printf("%-10s : %s\n", "State", serverState);
-                    System.out.printf("%-10s : %s\n", "Expected", expectedKeyword);
+                    if(expectedKeyword.equals("GUE")){
+                        System.out.printf("%-10s : %s\n", "Expected", expectedKeyword + " [letter]");
+                    }
+                    else{
+                        System.out.printf("%-10s : %s\n", "Expected", expectedKeyword);
+                    }
                     System.out.printf("%-10s : %s\n", "Recieved", message);
 
                     //CHECK IF NEW CLIENT
@@ -134,17 +139,21 @@ public class GuessTheWordServer {
                                             else{
                                                 if(Character.isLetter(splitMessage[1].charAt(0)) && splitMessage[1].length() == 1){
                                                     updateLetters(splitMessage[1].charAt(0));
+                                                    noOfGuesses++;
                                                     if(hasAllLettersFound()){
-                                                        sendToClient("WIN " + word, currentClient, socket);
+                                                        sendToClient("WIN " + noOfGuesses + " " + word, currentClient, socket);
                                                         System.out.printf("%-10s : %s\n", "Status", "Game Over: WIN");
                                                         reset();
                                                     }
+                                                    else if(noOfGuesses >= MAX_NO_OF_GUESSES){
+                                                        sendToClient("LSS " + word, currentClient, socket);
+                                                        System.out.printf("%-10s : %s\n", "Status", "Game Over: LOSS");
+                                                        reset();
+                                                    }
                                                     else{
-                                                        sendToClient("CUR " + getFoundLettersAsString(), currentClient, socket);
-
+                                                        sendToClient("CUR " + noOfGuesses + " " + getFoundLettersAsString(), currentClient, socket);
                                                         System.out.printf("%-10s : %s\n", "Status", "Playing - Characters found: " + getFoundLettersAsString());
                                                     }
-
                                                 }
                                                 else{
                                                     sendToClient("IVD", currentClient, socket);
@@ -164,13 +173,16 @@ public class GuessTheWordServer {
                             }
                         }
                     }
+                    System.out.printf("%-10s : %s\n", "NoGuesses", noOfGuesses);
+                    System.out.printf("%-10s : %s\n", "Word", word);
+
                     if(currentClient != null) {
                         System.out.printf("%-10s : %s\n", "Connected", currentClient.getInetAddress().getHostAddress());
                     }
                     else{
                         System.out.printf("%-10s : %s\n", "Connected", "not connected");
                     }
-                    System.out.println("-----------------");
+                    System.out.println("----------------");
                 } catch (IOException e) {
                     System.err.println("Socket error");
                     reset();
