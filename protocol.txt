@@ -5,4 +5,4 @@
 5. Client starts guessing letters by sending GUE [letter] to server
 6. If client sends invalid character, server responds with IVD
 7. Server answers with a string of letters in the format **P***, where asterisks is non-found letters
-8. Repeat from 5 until word is found or max number of guesses is reached
+8. Repeat from 5 until word is found or max number of guesses is reached, send WIN/LSS [word]
