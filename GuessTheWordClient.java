@@ -13,6 +13,7 @@ public class GuessTheWordClient {
             System.err.println("Wrong number of arguments. \nCorrect usage: java GuessTheWordClient XXX.XXX.XXX.XXX PORT");
             System.exit(1);
         }
+        System.out.println("To start, type \"REQ\"");
         Scanner input = new Scanner(System.in);
         boolean running = true;
         DatagramSocket socket = null;
@@ -24,6 +25,7 @@ public class GuessTheWordClient {
                 toAddr = InetAddress.getByName(args[0]);
                 String message = "";
                 do {
+
                     System.out.print("Send message: ");
                     message = input.nextLine();
                     byte[] data = message.getBytes();
@@ -40,10 +42,10 @@ public class GuessTheWordClient {
 
                     String receivedMessage = new String(receivedPacket.getData(), 0, receivedPacket.getLength());
 
-                    System.out.println("From server: " + receivedMessage);
+                    //System.out.println("From server: " + receivedMessage);
                     String extractedKeyWord = extractKeyword(receivedMessage);
-
-                    switch (extractedKeyWord) {
+                    String[] receiveMessageSplit = receivedMessage.split(" ");
+                    switch (extractedKeyWord) { //TOTO REJ, LSS
                         case "BSY": {
                             System.out.println("Server response: BSY");
                             running = false;
@@ -52,6 +54,30 @@ public class GuessTheWordClient {
                         case "RDY": {
                             System.out.println("Server response: RDY");
                             System.out.println("Server waiting for SRT");
+                            break;
+                        }
+                        case "GME": {
+                            System.out.println("Guess the word\n" +
+                                    "Number of letters: " + receiveMessageSplit[1]);
+                            break;
+                        }
+                        case "CUR": {
+                            System.out.println("WORD: " + receiveMessageSplit[1]);
+                            break;
+                        }
+                        case "WIN": {
+                            System.out.println("CONGRATULATIONS - You found the word!");
+                            System.out.println(receiveMessageSplit[1]);
+                            break;
+                        }
+                        case "IVD": {
+                            System.out.println("Invalid command" +
+                                    ", Correct use is: GUE *");
+                            break;
+                        }
+                        case "ERR": {
+                            System.out.println("Invalid command" +
+                                    ", Game session reset by server.");
                             break;
                         }
                     }
