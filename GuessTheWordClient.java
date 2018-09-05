@@ -64,7 +64,8 @@ public class GuessTheWordClient {
                         }
                         case "CUR": { // Current situation
                             System.out.println("Server response: CUR");
-                            System.out.println("WORD: " + receiveMessageSplit[1]);
+                            System.out.println("WORD: " + receiveMessageSplit[2]);
+                            System.out.println("Number of guesses: " + receiveMessageSplit[1]);
                             break;
                         }
                         case "IVD": { // Invalid Command
@@ -87,13 +88,15 @@ public class GuessTheWordClient {
                         case "WIN": { // Win message
                             System.out.println("Server response: WIN");
                             System.out.println("CONGRATULATIONS - You found the word!");
-                            System.out.println(receiveMessageSplit[1]);
+                            System.out.println("You got the answer in " + receiveMessageSplit[1] + " guesses.");
+                            System.out.println(receiveMessageSplit[2]);
                             running = false;
                             break;
                         }
                         case "LSS": { // Loose message
                             System.out.println("Server response: LSS");
                             System.out.println("FAILED - You did not find the word.. :(");
+                            System.out.println("Correct word was " + receiveMessageSplit[1]);
                             break;
                         }
                     }
