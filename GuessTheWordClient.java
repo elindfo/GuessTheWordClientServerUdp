@@ -46,38 +46,54 @@ public class GuessTheWordClient {
                     String extractedKeyWord = extractKeyword(receivedMessage);
                     String[] receiveMessageSplit = receivedMessage.split(" ");
                     switch (extractedKeyWord) { //TOTO REJ, LSS
-                        case "BSY": {
+                        case "BSY": { // Server is busy with other player, (not used now)
                             System.out.println("Server response: BSY");
                             running = false;
                             break;
                         }
-                        case "RDY": {
+                        case "RDY": { // Server responding to a REQ
                             System.out.println("Server response: RDY");
                             System.out.println("Server waiting for SRT");
                             break;
                         }
-                        case "GME": {
+                        case "GME": { // Welcome message
+                            System.out.println("Server response: GME");
                             System.out.println("Guess the word\n" +
                                     "Number of letters: " + receiveMessageSplit[1]);
                             break;
                         }
-                        case "CUR": {
+                        case "CUR": { // Current situation
+                            System.out.println("Server response: CUR");
                             System.out.println("WORD: " + receiveMessageSplit[1]);
                             break;
                         }
-                        case "WIN": {
-                            System.out.println("CONGRATULATIONS - You found the word!");
-                            System.out.println(receiveMessageSplit[1]);
-                            break;
-                        }
-                        case "IVD": {
+                        case "IVD": { // Invalid Command
+                            System.out.println("Server response: IVD");
                             System.out.println("Invalid command" +
                                     ", Correct use is: GUE *");
                             break;
                         }
-                        case "ERR": {
-                            System.out.println("Invalid command" +
+                        case "ERR": { // Time limit expired
+                            System.out.println("Server response: ERR");
+                            System.out.println("Invalid protocol usage" +
                                     ", Game session reset by server.");
+                            break;
+                        }
+                        case "REJ": { // Server is busy with another player
+                            System.out.println("Server response: REJ");
+                            System.out.println("Server Busy, try again later.");
+                            break;
+                        }
+                        case "WIN": { // Win message
+                            System.out.println("Server response: WIN");
+                            System.out.println("CONGRATULATIONS - You found the word!");
+                            System.out.println(receiveMessageSplit[1]);
+                            running = false;
+                            break;
+                        }
+                        case "LSS": { // Loose message
+                            System.out.println("Server response: LSS");
+                            System.out.println("FAILED - You did not find the word.. :(");
                             break;
                         }
                     }
