@@ -6,3 +6,46 @@
 6. If client sends invalid character, server responds with IVD
 7. Server answers with a string of letters in the format **P***, where asterisks is non-found letters
 8. Repeat from 5 until word is found or max number of guesses is reached, send WIN/LSS [word]
+
+
+
+
+****1. REQ****
+Actor - CLIENT:
+To initialize communication with the server, the client sends a REQ signal.
+
+Actor - SERVER:
+If the server receives a REQ signal and is not busy with another client, it will respond with
+a RDY signal. Expected keyword is changed to SRT.
+If the server is currently busy with another client the server will respond with a BSY signal.
+**************
+
+****2. BSY****
+Server indicates that it is currently busy with another client.
+If the client receives BSY, the process will terminate.
+**************
+
+****3. RDY****
+Server sends RDY to indicate that it is ready to begin playing
+**************
+
+****4. GME****
+Server sends a GME signal, along with how many characters the word contains. e.g. "GME 4"
+Expected keyword changes to: GUE
+**************
+
+****5. GUE****
+Server receives GUE and responds with appropriate signal depending on game status.
+1. If any other than expected keyword and exactly one (1) character is received, server responds with IVD (invalid
+2. If client guessed all characters, the server sends a WIN signal
+   Client will terminate when WIN signal is received
+3. If the limit of guesses has been reached, a LSS signal is sent (LOSE)
+   Client will terminate when LSS signal is received
+4. CUR to prompt another guess from the client.
+**************
+
+****6. ERR****
+If other than expected keyword at any time in an ongoing game is received, the server then sends an ERR signal
+and resets the game session. The client terminates if an ERR signal is received.
+**************
+

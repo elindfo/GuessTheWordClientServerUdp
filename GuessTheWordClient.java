@@ -78,11 +78,7 @@ public class GuessTheWordClient {
                             System.out.println("Server response: ERR");
                             System.out.println("Invalid protocol usage" +
                                     ", Game session reset by server.");
-                            break;
-                        }
-                        case "REJ": { // Server is busy with another player
-                            System.out.println("Server response: REJ");
-                            System.out.println("Server Busy, try again later.");
+                            running = false;
                             break;
                         }
                         case "WIN": { // Win message
@@ -97,6 +93,7 @@ public class GuessTheWordClient {
                             System.out.println("Server response: LSS");
                             System.out.println("FAILED - You did not find the word.. :(");
                             System.out.println("Correct word was " + receiveMessageSplit[1]);
+                            running = false;
                             break;
                         }
                     }
