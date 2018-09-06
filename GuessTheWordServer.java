@@ -20,12 +20,13 @@ public class GuessTheWordServer {
     private int noOfGuesses;
     private char[] correctLettersGuessed;
 
-    private static final int MAX_NO_OF_GUESSES = 10;
+    private int maxNrOfGuesses;
 
     private static final int TIMEOUT_IN_SECONDS = 10;
 
     public GuessTheWordServer(String word, int port){
         this.word = word.toUpperCase();
+        this.maxNrOfGuesses = word.length() * 2;
         this.port = port;
         reset();
     }
