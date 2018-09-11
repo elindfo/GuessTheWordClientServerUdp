@@ -41,11 +41,16 @@ Server receives GUE and responds with appropriate signal depending on game statu
    Client will terminate when WIN signal is received
 3. If the limit of guesses has been reached, a LSS signal is sent (LOSE)
    Client will terminate when LSS signal is received
-4. CUR to prompt another guess from the client.
+4. server sends CUR to prompt another guess from the client.
 **************
 
 ****6. ERR****
 If other than expected keyword at any time in an ongoing game is received, the server then sends an ERR signal
 and resets the game session. The client terminates if an ERR signal is received.
+**************
+
+****7. CUR****
+Server sends CUR along with the current word obscured and number of guesses.
+This message serves as an update and informs the client of current game status.
 **************
 

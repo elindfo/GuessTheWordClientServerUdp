@@ -146,7 +146,7 @@ public class GuessTheWordServer {
                                                         System.out.printf("%-10s : %s\n", "Status", "Game Over: WIN");
                                                         reset();
                                                     }
-                                                    else if(noOfGuesses >= MAX_NO_OF_GUESSES){
+                                                    else if(noOfGuesses >= maxNrOfGuesses){
                                                         sendToClient("LSS " + word, currentClient, socket);
                                                         System.out.printf("%-10s : %s\n", "Status", "Game Over: LOSS");
                                                         reset();

@@ -89,7 +89,7 @@ public class GuessTheWordClient {
                             running = false;
                             break;
                         }
-                        case "LSS": { // Loose message
+                        case "LSS": { // Loss message
                             System.out.println("Server response: LSS");
                             System.out.println("FAILED - You did not find the word.. :(");
                             System.out.println("Correct word was " + receiveMessageSplit[1]);
