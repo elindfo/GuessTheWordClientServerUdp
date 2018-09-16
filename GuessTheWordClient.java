@@ -117,17 +117,6 @@ public class GuessTheWordClient {
         }
     }
 
-    private static void sendToServer(String text, InetAddress inetAddress, DatagramSocket socket, int port) throws IOException {
-        byte[] bytes = text.getBytes();
-        DatagramPacket pkt = new DatagramPacket(
-                bytes,
-                bytes.length,
-                inetAddress,
-                port
-        );
-        socket.send(pkt);
-    }
-
     private static String extractKeyword(String s) {
         if (s.isEmpty()) {
             return "";
