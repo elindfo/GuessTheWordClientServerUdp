@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.net.*;
 import java.util.Scanner;
 
-//TODO Handle unresponsive server
-
 public class GuessTheWordClient {
 
     public static void main(String[] args) {

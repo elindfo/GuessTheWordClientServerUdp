@@ -3,11 +3,6 @@ package lab1a;
 import java.io.IOException;
 import java.net.*;
 
-//Fel, klienten som spelar börjar prata strunt. Klienten ska bort och servern blir ledig
-//Fel, En ny klient kommer och att man inte uppfattar att det är en annan klient
-
-//TODO Handle timeout from client with System.getCurrentTimeMillis(). Reset server state.
-
 public class GuessTheWordServer {
 
     private Client currentClient;
