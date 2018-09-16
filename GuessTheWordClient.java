@@ -106,7 +106,7 @@ public class GuessTheWordClient {
                 System.err.println("Closing Client");
             }
             catch (IOException ioe) {
-                ioe.printStackTrace();
+                System.err.println("Unknown IOExeption");;
             }
         } catch (SocketException se) {
             System.err.println("Socket exception");
